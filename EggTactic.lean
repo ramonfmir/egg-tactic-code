@@ -12,9 +12,7 @@ import Lean.Elab.Tactic.Config
 import Lean.Data.Json
 import Lean.Elab.Deriving.FromToJson
 
-open Lean Elab Meta Tactic Term
-open IO
-open System
+open Lean Elab Meta Tactic Term IO System
 
 --initialize registerTraceClass `EggTactic.egg
 
@@ -31,7 +29,8 @@ def EggRewriteDirection.toString : EggRewriteDirection → String
   | Forward => "fwd"
   | Backward => "bwd"
 
-instance : ToString EggRewriteDirection where toString := EggRewriteDirection.toString
+instance : ToString EggRewriteDirection where 
+  toString := EggRewriteDirection.toString
 
 open EggRewriteDirection
 
@@ -39,18 +38,20 @@ structure EggRewrite where
   name: String
   lhs: Sexp
   rhs: Sexp
-  -- TODO: see if converting to FVars makes it better
-  pretendMVars: Array MVarId -- list of pretend mvars needed by this rewrite
-                      --  Why do we need this again?
-  rw: Expr -- the rewrite with fvars applied
-  unappliedRw: Expr -- the rewrite without fvars applied
+  /- MVars needed by this rewrite.
+  TODO: see if converting to FVars makes it better -/
+  pretendMVars: Array MVarId
+  /- Rewrite with FVars applied. -/
+  rw: Expr
+  /- Rewrite without FVars applied. -/
+  unappliedRw: Expr
   rwType: Expr
   unappliedRwType: Expr
   direction : EggRewriteDirection
 
 instance : Inhabited EggRewrite where
   default := EggRewrite.mk
-         "default" "default" "default" #[] default default default default default
+    "default" "default" "default" #[] default default default default default
 
 structure Eggxplanation where
   direction: EggRewriteDirection -- direction of the rewrite
@@ -600,7 +601,7 @@ def eggAddExprAsRewrite (goal: MVarId) (rw: Expr) (ty: Expr): EggM Unit := do
 
 -- Add all equalities from the local context
 def addAllLocalContextEqualities (goal: MVarId) (goals: List MVarId): EggM Unit :=
-  withMVarContext goal do
+  goal.withContext do
     trace[EggTactic.egg] "goals: {goals.map fun g => g.name}"
     for decl in (← getLCtx) do
       if decl.toExpr.isMVar && goals.contains (decl.toExpr.mvarId!)
@@ -710,7 +711,7 @@ def runEggRequest (goal: MVarId) (request: EggRequest): MetaM (List Eggxplanatio
 
 -- Add rewrites with known names 'rewriteNames' from the local context of 'goalMVar'
 def addNamedRewrites (goalMVar: MVarId)  (rewriteNames: List Ident): EggM Unit :=
-  withMVarContext goalMVar do
+  goalMVar.withContext do
     trace[EggTactic.egg] " addNamedRewrites {goalMVar.name} {rewriteNames.map ToString.toString}"
     for decl in (← getLCtx) do
     -- TODO: find a way to not have to use strings, see how 'simp' does this.
