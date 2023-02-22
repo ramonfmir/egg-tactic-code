@@ -3,8 +3,8 @@ import EggTactic
 inductive EQ {α : Type} (a : α) : α → Type where
   | refl : EQ a a
 
-def EQ.trans (h₁ : EQ a b) (h₂ : EQ b c) : EQ a c := by
-  cases h₁; cases h₂; constructor
+def EQ.trans {a b c : α} (h₁ : EQ a b) (h₂ : EQ b c) : EQ a c := by
+  cases h₁; exact h₂ 
 
 instance : Trans (@EQ α) (@EQ α) (@EQ α) where
   trans := EQ.trans
