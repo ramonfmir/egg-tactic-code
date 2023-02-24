@@ -1,3 +1,4 @@
+import EggTactic.Util
 import EggTactic.Sexp
 import EggTactic.Tracing
 import Lean.Meta.Tactic.Rewrite
@@ -14,9 +15,6 @@ import Lean.Elab.Deriving.FromToJson
 
 open Lean Elab Meta Tactic Term IO System
 
---initialize registerTraceClass `EggTactic.egg
-
--- Path to the egg server.
 def egg_server_path : String :=
   "utils/egg-herbie"
 
@@ -35,18 +33,18 @@ instance : ToString EggRewriteDirection where
 open EggRewriteDirection
 
 structure EggRewrite where
-  name: String
-  lhs: Sexp
-  rhs: Sexp
+  name : String
+  lhs : Sexp
+  rhs : Sexp
   /- MVars needed by this rewrite.
   TODO: see if converting to FVars makes it better -/
-  pretendMVars: Array MVarId
+  pretendMVars : Array MVarId
   /- Rewrite with FVars applied. -/
-  rw: Expr
+  rw : Expr
   /- Rewrite without FVars applied. -/
-  unappliedRw: Expr
-  rwType: Expr
-  unappliedRwType: Expr
+  unappliedRw : Expr
+  rwType : Expr
+  unappliedRwType : Expr
   direction : EggRewriteDirection
 
 instance : Inhabited EggRewrite where
@@ -67,12 +65,10 @@ instance : ToString Eggxplanation where
     let mvars := "{" ++ (", ".intercalate mvars) ++ "}"
     toString f!"(Eggxplanation dir:{expl.direction} rule:{expl.rule} mvars:{mvars} result:{expl.result})"
 
-
-
-def nameToSexp: Name -> Sexp
-| Name.anonymous => "anonymous"
-| Name.str n s => Sexp.fromList ["str", nameToSexp n, s]
-| Name.num n i => Sexp.fromList ["num", nameToSexp n, (toString i)]
+def nameToSexp : Name -> Sexp
+  | Name.anonymous => "anonymous"
+  | Name.str n s => Sexp.fromList ["str", nameToSexp n, s]
+  | Name.num n i => Sexp.fromList ["num", nameToSexp n, (toString i)]
 
 -- | TODO: cleanup error handling
 def parseNameSexpr (sexpr: Sexp) : MetaM Name := do
@@ -83,8 +79,6 @@ def parseNameSexpr (sexpr: Sexp) : MetaM Name := do
   | Sexp.list [Sexp.atom "num", n, Sexp.atom s] =>
     return Name.mkNum (← parseNameSexpr n) (s.toNat!)
   | _ => throwError s!"unexpected sexpr {sexpr}"
-
-
 
 def levelToSexp: Level → Sexp
 | Level.zero => "zero"
@@ -103,8 +97,6 @@ def parseLevelSexpr (s: Sexp): MetaM Level := do
   | Sexp.list [Sexp.atom "param", n] => return Level.param (← parseNameSexpr n)
   | Sexp.list [Sexp.atom "mvar", n] => return Level.mvar (LevelMVarId.mk (← parseNameSexpr n))
   | _ => throwError s!"unexpected level sexpr: {s}"
-
-
 
 mutual
 -- TODO: see if there is some other way to give mvars in a structured way instead of string
