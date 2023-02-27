@@ -111,7 +111,7 @@ partial def exprToUntypedSexp (e: Expr): MetaM Sexp :=
 match e with
   | Expr.const name [] => return .fromList ["const", nameToSexp name, "nolevels"]
   | Expr.const name levels => return .fromList ["const", nameToSexp name, .fromList ["levels", (levels.map levelToSexp)]]
-  | Expr.bvar ix => return .fromList ["bbar", toString ix]
+  | Expr.bvar ix => return .fromList ["bvar", toString ix]
   | Expr.fvar id => return .fromList ["fvar", nameToSexp id.name]
   -- TODO: see if there is some other way to give mvars in a structured way instead of string
   | Expr.mvar id => do
@@ -121,6 +121,12 @@ match e with
   | Expr.app  l r => do
      return (.fromList ["ap", (← exprToUntypedSexp l), (← exprToUntypedSexp r)])
   | Expr.sort lvl => return (.fromList ["sort", levelToSexp lvl])
+  -- Assume binderInfo = default for now
+  | Expr.lam binderName binderType body binderInfo => 
+      return .fromList ["lam", 
+        nameToSexp binderName,
+        ← exprToUntypedSexp binderType, 
+        ← exprToUntypedSexp body]
   | _ => throwError s!"unimplemented exprToUntypedSexp ({e.ctorName}): {e}"
 end
 
@@ -156,9 +162,16 @@ partial def parseExprSexpr (s: Sexp): MetaM Expr := do
   | Sexp.list [Sexp.atom "const", name, Sexp.list [Sexp.atom "levels", Sexp.list levels] ] => do
     let levels ← levels.mapM parseLevelSexpr
     return Expr.const (← parseNameSexpr name) levels
+  | Sexp.list [Sexp.atom "bvar", Sexp.atom idx] => return mkBVar idx.toNat!
   | Sexp.list [Sexp.atom "fvar", n] => return mkFVar (FVarId.mk (← parseNameSexpr n))
   | Sexp.list [Sexp.atom "litNat", n] => return mkNatLit n.toAtom!.toNat!
   | Sexp.list [Sexp.atom "ap", l, r] => return mkApp (← parseExprSexpr l) (← parseExprSexpr r)
+  | Sexp.list [Sexp.atom "lam", name, binderType, body] => 
+      return Expr.lam 
+        (← parseNameSexpr name) 
+        (← parseExprSexpr binderType) 
+        (← parseExprSexpr body)
+        BinderInfo.default
   | _ => throwError s!"unimplemented parseExprSexpr '{s}': {s}"
 
 
