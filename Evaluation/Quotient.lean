@@ -91,10 +91,33 @@ theorem comm_thm
 #print comm_thm
 
 theorem comm_thm'
-  (constr_comm : ∀  {D : Type} {cs₁ cs₂ : D → Prop}, 
+  (constr_comm : ∀ {D : Type} {cs₁ cs₂ : D → Prop}, 
     ⦃ fun x => cs₁ x ∧ cs₂ x ⦄ = ⦃ fun x => cs₂ x ∧ cs₁ x ⦄)
   (a : Nat → Prop) (b : Prop) : 
   ⦃ fun (x : Nat) => a x ∧ b ⦄ = ⦃ fun (x : Nat) => b ∧ a x ⦄ :=
+  by 
+    --eggxplosion [constr_comm]
+    rw [constr_comm]
+
+theorem comm_thm''
+  (constr_comm : ∀ {x y : Prop}, 
+    (fun (_ : Nat) => x ∧ y) = (fun (_ : Nat) => y ∧ x))
+  (a : Nat → Prop) (b : Prop) : 
+  ⦃ fun (x : Nat) => a x ∧ b ⦄ = ⦃ fun (x : Nat) => b ∧ a x ⦄ :=
+  by eggxplosion [constr_comm]
+
+theorem comm_thm'''
+  (constr_comm : ∀ {D : Type} {cs₁ cs₂ : D → Prop} {x : D}, 
+    (cs₁ x ∧ cs₂ x) = (cs₂ x ∧ cs₁ x))
+  (a : Nat → Prop) (b : Prop) : 
+  ⦃ fun (x : Nat) => a x ∧ b ⦄ = ⦃ fun (x : Nat) => b ∧ a x ⦄ :=
+  by eggxplosion [constr_comm]
+
+theorem comm_thm''''
+  (constr_comm : ∀ {D : Type} {cs₁ cs₂ : D → Prop} {x : D}, 
+    (cs₁ x ∧ cs₂ x) = (cs₂ x ∧ cs₁ x))
+  (a : Nat → Prop) (b : Prop) : 
+  (a x ∧ b) = (b ∧ a x) :=
   by eggxplosion [constr_comm]
 
 theorem comm_assoc_thm 
@@ -106,15 +129,30 @@ theorem comm_assoc_thm
   ⦃ fun (x : Nat) => a x ∧ b x ∧ c x ⦄ = ⦃ fun (x : Nat) => c x ∧ a x ∧ b x ⦄ :=
   by eggxplosion [constr_comm, constr_assoc]
 
-theorem comm_assoc_thm' 
-  (constr_comm : ∀  {D : Type} {cs₁ cs₂ : D → Prop}, 
+theorem comm_assoc_thm'
+  (constr_comm : ∀ {cs₁ cs₂ : D → Prop}, 
     ⦃ fun x => cs₁ x ∧ cs₂ x ⦄ = ⦃ fun x => cs₂ x ∧ cs₁ x ⦄)
-  (constr_comm' : ∀ {D : Type} {cs cs₁ cs₂ : D → Prop}, 
-    ⦃ fun x => cs x ∧ (cs₁ x ∧ cs₂ x) ⦄ = ⦃ fun x => cs x ∧ (cs₂ x ∧ cs₁ x) ⦄)
-  (constr_assoc : ∀  {D : Type} {cs₁ cs₂ cs₃ : D → Prop},
+  -- (constr_comm' : ∀ {cs cs₁ cs₂ : D → Prop}, 
+  --   ⦃ fun x => cs x ∧ (cs₁ x ∧ cs₂ x) ⦄ = ⦃ fun x => cs x ∧ (cs₂ x ∧ cs₁ x) ⦄)
+  (constr_assoc : ∀ {cs₁ cs₂ cs₃ : D → Prop},
     ⦃ fun x => (cs₁ x ∧ cs₂ x) ∧ cs₃ x ⦄ = ⦃ fun x => cs₁ x ∧ (cs₂ x ∧ cs₃ x) ⦄)
+  (a b c : D → Prop) :
+  ⦃ fun (x : D) => a x ∧ b x ∧ c x ⦄ = ⦃ fun (x : D) => c x ∧ a x ∧ b x ⦄ :=
+  by 
+    --eggxplosion [constr_comm, constr_assoc]
+    rw [← constr_assoc]
+    rw [constr_comm]
+
+
+theorem simple_comm_thm 
+  (comm_prop : ∀ {cs₁ cs₂ : Prop}, 
+    (cs₁ ∧ cs₂) = (cs₂ ∧ cs₁))
+  (comm_fun : ∀ {cs₁ cs₂ : Nat → Prop}, 
+    (fun x => cs₁ x ∧ cs₂ x) = (fun x => cs₂ x ∧ cs₁ x))
   (a b c : Nat → Prop) :
-  ⦃ fun (x : Nat) => a x ∧ b x ∧ c x ⦄ = ⦃ fun (x : Nat) => c x ∧ a x ∧ b x ⦄ :=
-  by eggxplosion [constr_comm, constr_comm', constr_assoc]
+  (fun x => (a x ∧ (b x ∧ c x))) = (fun x => ((b x ∧ c x) ∧ a x)) :=
+  by eggxplosion [comm_fun] simplify
+
+#print simple_comm_assoc_thm
 
 end Test
